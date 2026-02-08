@@ -1,0 +1,21 @@
+# Copilot Instructions for This Repo
+
+- Purpose: tiny FastAPI demo with in-memory user list stored in `main.py`; no DB/persistence. Mutations only affect process memory.
+- Entry point: `main.py` defines the FastAPI `app` and `User` model; module path for ASGI is `main:app`.
+- Data model: `User` (Pydantic) with `name:str`, `age:int`. Global `dic` is a list of `{"name", "age"}` dicts; assume duplicates allowed.
+- API surface (all in `main.py`):
+  - `GET /` returns `{ "hello": "world" }`.
+  - `POST /createNewUser` expects JSON matching `User`; appends to `dic`; returns full list.
+  - `DELETE /deleteUser` expects JSON matching `User`; removes exact name+age matches; returns status and remaining list; uses `global dic` reassignment.
+- Running locally: `python main.py` (invokes `uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)`). Alternative: `uvicorn main:app --reload --port 8000` from repo root.
+- Dependencies: FastAPI, Pydantic, Uvicorn. Install with `pip install fastapi "uvicorn[standard]" pydantic` if missing.
+- Hot reload: enabled only when running via `python main.py` because of the `__main__` guard; using `uvicorn` CLI requires `--reload` flag for same behavior.
+- Statefulness: `dic` is module-level mutable state; tests or multiple requests in one process share it. Restart clears data.
+- Patterns: endpoints use standard FastAPI decorators; request bodies mapped to Pydantic model; responses returned as plain dicts/lists (FastAPI auto-converts to JSON).
+- Adding endpoints: follow existing decorator style, accept Pydantic models for bodies, return JSON-serializable objects. Keep mutations on `dic` consistent (copy vs in-place) to avoid race surprises under concurrency.
+- Error handling: none implemented; add validation or 404 responses explicitly if changing behavior. Keep backward compatibility with current simple responses unless requirements change.
+- Testing: no tests present. If adding, prefer `httpx.AsyncClient`/`TestClient` against `main.app` for integration coverage.
+- Debugging: use `uvicorn --reload --log-level debug` for request logging; inspect `dic` contents directly in handlers for quick checks.
+- Repo layout: only `main.py` plus `__pycache__`; no hidden conventions elsewhere.
+- Formatting/comments: keep comments minimal and purpose-driven; ASCII only unless existing code requires otherwise.
+- When extending: avoid introducing persistence layers unless asked; document any new global state or side effects in this file.
