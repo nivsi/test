@@ -14,4 +14,5 @@ class B:
 class C(A, B):
     def __init__(self, x, y, z):
         super.__init__(x,y,z) 
-        super.__init__(x,y)            
+        super.__init__(x,y)
+        print("hello")            
